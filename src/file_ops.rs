@@ -1,7 +1,8 @@
 use std::ffi::CStr;
 use std::fs::File;
 use std::io::Read;
-use std::os::fd::{AsRawFd, FromRawFd};
+use std::mem;
+use std::os::fd::{AsFd, AsRawFd, FromRawFd};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -29,9 +30,10 @@ pub fn read_events(fa_fd: &Fanotify) {
         println!("{} events received", events.len());
         for e in events {
             let accessed = e.fd().unwrap();
-            let mut file = unsafe { File::from_raw_fd(accessed.as_raw_fd()) };
+            let mut file = unsafe { File::from_raw_fd(accessed.clone().as_raw_fd()) };
             let mut content_buf = [0; 4096];
             _ = file.read(&mut content_buf);
+            mem::forget(file);
             let content = String::from_utf8(content_buf.to_vec()).unwrap();
             println!("{content}");
             if content
@@ -47,7 +49,6 @@ pub fn read_events(fa_fd: &Fanotify) {
                 let fp = c_str.to_str().unwrap();
                 println!("Virus detected in {}", fp);
             }
-            unsafe {close(accessed.as_raw_fd());}
         }
         sleep(Duration::from_millis(1400));
     }
