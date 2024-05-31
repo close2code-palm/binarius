@@ -4,6 +4,8 @@ use std::ffi::CStr;
 use std::fs::File;
 use std::io::Read;
 use std::os::fd::{AsRawFd, FromRawFd};
+use std::thread::sleep;
+use std::time::Duration;
 
 use nix::libc::{c_char, readlink};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
@@ -32,6 +34,7 @@ pub fn read_events(fa_fd: &Fanotify) {
             let mut content_buf = [0; 4096];
             _ = file.read(&mut content_buf);
             let content = String::from_utf8(content_buf.to_vec()).unwrap();
+            println!("{content}");
             if content
                 .contains("X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*")
             {
@@ -43,6 +46,7 @@ pub fn read_events(fa_fd: &Fanotify) {
                 let fp = c_str.to_str().unwrap();
                 println!("Virus detected in {}", fp);
             }
+            sleep(Duration::from_millis(100));
         }
     }
 }
