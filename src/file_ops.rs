@@ -35,7 +35,7 @@ pub fn read_events(fa_fd: &Fanotify) {
             if content
                 .contains("X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*")
             {
-                let buf: *mut c_char = "\0";
+                let buf: *mut c_char = std::ptr::null_mut();
                 let fd_path =
                     format!("/proc/self/fd/{}", accessed.as_raw_fd()).as_ptr() as *const c_char;
                 _ = unsafe { readlink(fd_path, buf, 256); }
