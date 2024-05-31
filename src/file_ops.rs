@@ -55,8 +55,8 @@ pub fn read_events(fa_fd: &Fanotify) {
 
 #[cfg(target_os = "linux")]
 pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
-    let open_flag = OFlag::O_DIRECTORY | OFlag::O_RDONLY;
-    let open_mode = Mode::S_IRUSR | Mode::S_IRGRP | Mode::S_IROTH;
+    let open_flag = OFlag::O_DIRECTORY;
+    let open_mode = Mode::empty();
     let dir = Dir::open(dir_path.as_str(), open_flag, open_mode)
         .unwrap_or_else(|_| Dir::open("/", open_flag, open_mode).unwrap());
     println!("dir opened");
@@ -73,10 +73,10 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
 pub fn clear_fan(fan: &Fanotify) {
     fan.mark::<str>(
         MarkFlags::FAN_MARK_FLUSH,
-        MaskFlags::FAN_DELETE_SELF,
+        MaskFlags::empty(),
         None,
         None,
     )
-    .unwrap();
+    .unwrap_or_else(|e| eprintln!("{e}"));
     std::process::exit(0);
 }
