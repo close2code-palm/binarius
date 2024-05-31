@@ -1,12 +1,11 @@
 use nix::dir::Dir;
 use nix::fcntl::OFlag;
 use std::ffi::CStr;
-use std::fmt::Debug;
 use std::fs::File;
 use std::io::Read;
 use std::os::fd::{AsRawFd, FromRawFd};
 
-use nix::libc::{c_char, dirfd, readlink};
+use nix::libc::{c_char, readlink};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
 use nix::sys::stat::Mode;
 
@@ -32,17 +31,17 @@ pub fn read_events(fa_fd: &Fanotify) {
             let mut file = unsafe { File::from_raw_fd(accessed.as_raw_fd()) };
             let mut content_buf = [0; 4096];
             _ = file.read(&mut content_buf);
-            let content = String::from_utf8(content_buf.into_vec()).unwrap();
+            let content = String::from_utf8(content_buf.to_vec()).unwrap();
             if content
                 .contains("X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*")
             {
-                let buf: *mut c_char = Default::default();
+                let buf: *mut c_char = "\0";
                 let fd_path =
                     format!("/proc/self/fd/{}", accessed.as_raw_fd()).as_ptr() as *const c_char;
-                unsafe { readlink(fd_path, buf, 256) }
-                let c_str = unsafe { CStr::from_ptr(buf) };
+                _ = unsafe { readlink(fd_path, buf, 256); }
+                let c_str = unsafe { CStr::from_ptr(buf); };
                 let fp = c_str.to_str().unwrap();
-                println!("Virus detected in {}", fp)
+                println!("Virus detected in {}", fp);
             }
         }
     }
@@ -55,7 +54,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     let dir = Dir::open(dir_path.as_str(), open_flag, open_mode)
         .unwrap_or_else(|_| Dir::open("/", open_flag, open_mode).unwrap());
 
-    fan.mark(
+    fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD | MarkFlags::FAN_MARK_ONLYDIR,
         MaskFlags::FAN_CLOSE_WRITE,
         Some(dir.as_raw_fd()),
@@ -66,7 +65,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
 
 #[cfg(target_os = "linux")]
 pub fn clear_fan(fan: &Fanotify) {
-    fan.mark(
+    fan.mark::<str>(
         MarkFlags::FAN_MARK_FLUSH,
         MaskFlags::FAN_DELETE_SELF,
         None,
