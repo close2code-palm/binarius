@@ -7,14 +7,14 @@ use std::os::fd::{AsRawFd, FromRawFd};
 use std::thread::sleep;
 use std::time::Duration;
 
-use nix::libc::{c_char, readlink};
+use nix::libc::{c_char, readlink, FAN_MODIFY, AT_FDCWD};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
 use nix::sys::stat::Mode;
 
 #[cfg(target_os = "linux")]
 pub fn get_fan() -> Fanotify {
     let fa_fd = Fanotify::init(
-        InitFlags::FAN_CLASS_CONTENT,
+        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_REPORT_TID,
         EventFFlags::O_RDWR,
     )
     .unwrap_or_else(|e| {
@@ -43,7 +43,9 @@ pub fn read_events(fa_fd: &Fanotify) {
                 let buf: *mut c_char = std::ptr::null_mut();
                 let fd_path =
                     format!("/proc/self/fd/{}", accessed.as_raw_fd()).as_ptr() as *const c_char;
-                _ = unsafe { readlink(fd_path, buf, 256); };
+                _ = unsafe {
+                    readlink(fd_path, buf, 256);
+                };
                 let c_str = unsafe { CStr::from_ptr(buf) };
                 let fp = c_str.to_str().unwrap();
                 println!("Virus detected in {}", fp);
@@ -61,8 +63,11 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
         .unwrap_or_else(|_| Dir::open("/", open_flag, open_mode).unwrap());
     println!("dir opened");
     fan.mark::<str>(
-        MarkFlags::FAN_MARK_ADD | MarkFlags::FAN_MARK_ONLYDIR,
-        MaskFlags::FAN_CLOSE_WRITE | MaskFlags::FAN_OPEN,
+        MarkFlags::FAN_MARK_ADD,
+            MaskFlags::FAN_OPEN
+            | MaskFlags::FAN_CREATE
+            | MaskFlags::FAN_DELETE
+            | MaskFlags::FAN_MODIFY,
         Some(dir.as_raw_fd()),
         None,
     )
@@ -71,12 +76,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
 
 #[cfg(target_os = "linux")]
 pub fn clear_fan(fan: &Fanotify) {
-    fan.mark::<str>(
-        MarkFlags::FAN_MARK_FLUSH,
-        MaskFlags::empty(),
-        None,
-        None,
-    )
-    .unwrap_or_else(|e| eprintln!("{e}"));
+    fan.mark::<str>(MarkFlags::FAN_MARK_FLUSH, MaskFlags::empty(), None, None)
+        .unwrap_or_else(|e| eprintln!("{e}"));
     std::process::exit(0);
 }
