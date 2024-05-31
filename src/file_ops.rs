@@ -53,6 +53,17 @@ pub fn read_events(fa_fd: &Fanotify) {
 }
 
 #[cfg(target_os = "linux")]
+pub fn set_file_for_fan(fan: &Fanotify, file_name: &str) {
+    fan.mark::<str>(
+        MarkFlags::FAN_MARK_ADD,
+        MaskFlags::FAN_DELETE,
+        None,
+        Some(file_name),
+    )
+    .unwrap_or_else(|e| eprintln!("{e}, file"))
+}
+
+#[cfg(target_os = "linux")]
 pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     // let open_flag = OFlag::O_DIRECTORY;
     // let open_mode = Mode::S_IRWXG | Mode::S_IRWXU | Mode::S_IRWXO;
@@ -61,11 +72,11 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     println!("dir opening");
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD,
-            MaskFlags::FAN_OPEN,
+        MaskFlags::FAN_OPEN | MaskFlags::FAN_DELETE | MaskFlags::FAN_ONDIR,
         None,
-        Some(dir_path.as_str())
+        Some(dir_path.as_str()),
     )
-    .unwrap()
+    .unwrap_or_else(|e| eprintln!("{e}, dir"))
 }
 
 #[cfg(target_os = "linux")]
