@@ -62,9 +62,8 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD,
             MaskFlags::FAN_OPEN
-            | MaskFlags::FAN_CREATE
-            | MaskFlags::FAN_DELETE
-            | MaskFlags::FAN_MODIFY,
+            | MaskFlags::FAN_CREATE |
+            MaskFlags::FAN_CLOSE_WRITE,
         None,
         Some(dir_path.as_str())
     )

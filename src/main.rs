@@ -14,7 +14,7 @@ fn run() {
     let fac = fan_arc.clone();
     ctrlc::set_handler(move || {
         clear_fan(&fan_arc);
-    })
+    })  
     .unwrap();
     println!("cc");
     read_events(&fac);
