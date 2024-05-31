@@ -5,7 +5,7 @@ use std::os::fd::{AsRawFd, FromRawFd};
 use std::thread::sleep;
 use std::time::Duration;
 
-use nix::libc::{c_char, readlink};
+use nix::libc::{c_char, close, readlink};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
 
 #[cfg(target_os = "linux")]
@@ -47,6 +47,7 @@ pub fn read_events(fa_fd: &Fanotify) {
                 let fp = c_str.to_str().unwrap();
                 println!("Virus detected in {}", fp);
             }
+            unsafe {close(accessed.as_raw_fd());}
         }
         sleep(Duration::from_millis(1400));
     }
