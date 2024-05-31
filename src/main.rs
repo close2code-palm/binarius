@@ -9,12 +9,14 @@ fn run() {
     println!("running...");
     let fan = get_fan();
     set_dir_for_fan(&fan, "/safe/".to_string());
+    println!("dir set");
     let fan_arc = Arc::new(fan);
     let fac = fan_arc.clone();
     ctrlc::set_handler(move || {
         clear_fan(&fan_arc);
     })
     .unwrap();
+    println!("cc");
     read_events(&fac);
 }
 

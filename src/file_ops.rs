@@ -48,8 +48,8 @@ pub fn read_events(fa_fd: &Fanotify) {
                 let fp = c_str.to_str().unwrap();
                 println!("Virus detected in {}", fp);
             }
-            sleep(Duration::from_millis(1400));
         }
+        sleep(Duration::from_millis(1400));
     }
 }
 
@@ -59,7 +59,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     let open_mode = Mode::S_IRUSR | Mode::S_IRGRP | Mode::S_IROTH;
     let dir = Dir::open(dir_path.as_str(), open_flag, open_mode)
         .unwrap_or_else(|_| Dir::open("/", open_flag, open_mode).unwrap());
-
+    println!("dir opened");
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD | MarkFlags::FAN_MARK_ONLYDIR,
         MaskFlags::FAN_CLOSE_WRITE | MaskFlags::FAN_OPEN,
