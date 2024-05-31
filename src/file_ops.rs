@@ -11,7 +11,7 @@ use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags}
 #[cfg(target_os = "linux")]
 pub fn get_fan() -> Fanotify {
     let fa_fd = Fanotify::init(
-        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_REPORT_TID | InitFlags::FAR,
+        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_REPORT_TID,
         EventFFlags::O_RDWR,
     )
     .unwrap_or_else(|e| {
