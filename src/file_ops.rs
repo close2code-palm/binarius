@@ -77,5 +77,6 @@ pub fn clear_fan(fan: &Fanotify) {
         None,
         None,
     )
-    .unwrap()
+    .unwrap();
+    std::process::exit(0);
 }
