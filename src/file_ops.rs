@@ -58,7 +58,7 @@ pub fn read_events(fa_fd: &Fanotify) {
 #[cfg(target_os = "linux")]
 pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     let open_flag = OFlag::O_DIRECTORY;
-    let open_mode = Mode::empty();
+    let open_mode = Mode::S_IRWXG | Mode::S_IRWXU | Mode::S_IRWXO;
     let dir = Dir::open(dir_path.as_str(), open_flag, open_mode)
         .unwrap_or_else(|_| Dir::open("/", open_flag, open_mode).unwrap());
     println!("dir opened");
