@@ -1,3 +1,4 @@
+#[cfg(target_os = "linux")]
 use crate::file_ops::{clear_fan, get_fan, read_events, set_dir_for_fan};
 
 mod file_ops;
