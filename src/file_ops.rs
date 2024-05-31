@@ -65,7 +65,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
             | MaskFlags::FAN_CREATE
             | MaskFlags::FAN_DELETE
             | MaskFlags::FAN_MODIFY,
-        Some(AT_FDCWD),
+        None,
         Some(dir_path.as_str())
     )
     .unwrap()
