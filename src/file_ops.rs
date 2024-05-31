@@ -14,13 +14,14 @@ use nix::sys::stat::Mode;
 #[cfg(target_os = "linux")]
 pub fn get_fan() -> Fanotify {
     let fa_fd = Fanotify::init(
-        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_CLASS_CONTENT,
-        EventFFlags::O_RDONLY,
+        InitFlags::FAN_CLASS_CONTENT,
+        EventFFlags::O_RDWR,
     )
     .unwrap_or_else(|e| {
         eprintln!("{e}");
         panic!()
     });
+    println!("fa inited");
     fa_fd
 }
 
@@ -28,6 +29,7 @@ pub fn get_fan() -> Fanotify {
 pub fn read_events(fa_fd: &Fanotify) {
     loop {
         let events = fa_fd.read_events().unwrap_or(vec![]);
+        println!("{} events received", events.len());
         for e in events {
             let accessed = e.fd().unwrap();
             let mut file = unsafe { File::from_raw_fd(accessed.as_raw_fd()) };
@@ -46,7 +48,7 @@ pub fn read_events(fa_fd: &Fanotify) {
                 let fp = c_str.to_str().unwrap();
                 println!("Virus detected in {}", fp);
             }
-            sleep(Duration::from_millis(100));
+            sleep(Duration::from_millis(1400));
         }
     }
 }
@@ -60,7 +62,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
 
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD | MarkFlags::FAN_MARK_ONLYDIR,
-        MaskFlags::FAN_CLOSE_WRITE,
+        MaskFlags::FAN_CLOSE_WRITE | MaskFlags::FAN_OPEN,
         Some(dir.as_raw_fd()),
         None,
     )
