@@ -39,7 +39,7 @@ pub fn read_events(fa_fd: &Fanotify) {
                 let fd_path =
                     format!("/proc/self/fd/{}", accessed.as_raw_fd()).as_ptr() as *const c_char;
                 _ = unsafe { readlink(fd_path, buf, 256); };
-                let c_str = unsafe { CStr::from_ptr(buf); };
+                let c_str = unsafe { CStr::from_ptr(buf) };
                 let fp = c_str.to_str().unwrap();
                 println!("Virus detected in {}", fp);
             }
