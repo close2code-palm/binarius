@@ -1,5 +1,3 @@
-use nix::dir::Dir;
-use nix::fcntl::OFlag;
 use std::ffi::CStr;
 use std::fs::File;
 use std::io::Read;
@@ -7,9 +5,8 @@ use std::os::fd::{AsRawFd, FromRawFd};
 use std::thread::sleep;
 use std::time::Duration;
 
-use nix::libc::{c_char, readlink, FAN_MODIFY, AT_FDCWD};
+use nix::libc::{c_char, readlink, AT_FDCWD};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
-use nix::sys::stat::Mode;
 
 #[cfg(target_os = "linux")]
 pub fn get_fan() -> Fanotify {
@@ -69,7 +66,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
             | MaskFlags::FAN_DELETE
             | MaskFlags::FAN_MODIFY,
         Some(AT_FDCWD),
-        dir_path
+        Some(dir_path.as_str())
     )
     .unwrap()
 }
