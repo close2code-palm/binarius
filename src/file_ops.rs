@@ -5,7 +5,7 @@ use std::os::fd::{AsRawFd, FromRawFd};
 use std::thread::sleep;
 use std::time::Duration;
 
-use nix::libc::{c_char, readlink, AT_FDCWD};
+use nix::libc::{c_char, readlink};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
 
 #[cfg(target_os = "linux")]
@@ -56,7 +56,7 @@ pub fn read_events(fa_fd: &Fanotify) {
 pub fn set_file_for_fan(fan: &Fanotify, file_name: &str) {
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD,
-        MaskFlags::FAN_DELETE,
+        MaskFlags::FAN_DELETE | MaskFlags::FAN_OPEN | MaskFlags::FAN_MODIFY | MaskFlags::FAN_CLOSE,
         None,
         Some(file_name),
     )
