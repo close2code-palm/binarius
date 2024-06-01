@@ -15,7 +15,7 @@ use nix::sys::stat::Mode;
 #[cfg(target_os = "linux")]
 pub fn get_fan() -> Fanotify {
     let fa_fd = Fanotify::init(
-        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_REPORT_TID | InitFlags::from_bits_retain(FAN_REPORT_FID).unwrap(),
+        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_REPORT_TID | InitFlags::from_bits_retain(FAN_REPORT_FID),
         EventFFlags::O_RDWR,
     )
     .unwrap_or_else(|e| {
