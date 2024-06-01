@@ -8,7 +8,7 @@ use std::os::fd::{AsRawFd, FromRawFd};
 use std::thread::sleep;
 use std::time::Duration;
 
-use nix::libc::{c_char, FAN_REPORT_FID, readlink};
+use nix::libc::{c_char, FAN_MOVED_FROM, FAN_REPORT_FID, readlink};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
 use nix::sys::stat::Mode;
 
@@ -32,6 +32,10 @@ pub fn read_events(fa_fd: &Fanotify) {
         let events = fa_fd.read_events().unwrap_or(vec![]);
         println!("{} events received", events.len());
         for e in events {
+            if (e.mask() & MaskFlags::FAN_MOVED_FROM) == MaskFlags::FAN_MOVED_FROM {
+                println!("some thing is stolen!");
+                continue
+            }
             let accessed = e.fd().unwrap();
             let mut file = unsafe { File::from_raw_fd(accessed.clone().as_raw_fd()) };
             let mut content_buf = [0; 4096];
