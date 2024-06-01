@@ -1,21 +1,21 @@
 use nix::dir::Dir;
 use nix::fcntl::OFlag;
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr};
 use std::fs::File;
 use std::io::Read;
 use std::mem;
-use std::os::fd::{AsFd, AsRawFd, FromRawFd};
+use std::os::fd::{AsRawFd, FromRawFd};
 use std::thread::sleep;
 use std::time::Duration;
 
-use nix::libc::{c_char, close, readlink};
+use nix::libc::{c_char, FAN_REPORT_FID, readlink};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
 use nix::sys::stat::Mode;
 
 #[cfg(target_os = "linux")]
 pub fn get_fan() -> Fanotify {
     let fa_fd = Fanotify::init(
-        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_REPORT_TID,
+        InitFlags::FAN_CLASS_NOTIF | InitFlags::FAN_REPORT_TID | InitFlags::from_bits_retain(FAN_REPORT_FID).unwrap(),
         EventFFlags::O_RDWR,
     )
     .unwrap_or_else(|e| {
@@ -40,7 +40,6 @@ pub fn read_events(fa_fd: &Fanotify) {
             let content = String::from_utf8(content_buf.to_vec()).unwrap();
             println!("{content}");
             if content.contains("VIRA") {
-                // let buf: *mut c_char = CString::new("").unwrap().as_ptr();
                 let mut buf: Vec<c_char> = vec!['\t' as _; 256];
                 println!("buffed");
                 let fd_path =
@@ -85,7 +84,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     println!("dir opening");
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD | MarkFlags::FAN_MARK_ONLYDIR,
-        MaskFlags::FAN_OPEN | MaskFlags::FAN_EVENT_ON_CHILD,
+        MaskFlags::FAN_OPEN | MaskFlags::FAN_EVENT_ON_CHILD | MaskFlags::FAN_MOVED_FROM,
         Some(dir.as_raw_fd()),
         None,
     )
