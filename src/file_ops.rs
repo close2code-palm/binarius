@@ -37,7 +37,7 @@ pub fn read_events(fa_fd: &Fanotify) {
             let content = String::from_utf8(content_buf.to_vec()).unwrap();
             println!("{content}");
             if content
-                .contains("X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*")
+                .contains("VIRA")
             {
                 // let buf: *mut c_char = CString::new("").unwrap().as_ptr();
                 let mut buf: Vec<c_char> = vec!['\t' as _; 256];
