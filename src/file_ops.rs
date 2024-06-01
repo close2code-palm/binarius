@@ -85,7 +85,7 @@ pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
     println!("dir opening");
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD,
-        MaskFlags::FAN_OPEN | MaskFlags::FAN_DELETE | MaskFlags::FAN_ONDIR,
+        MaskFlags::FAN_ONDIR | MaskFlags::FAN_MOVE,
         Some(dir.as_raw_fd()),
         None,
     )
