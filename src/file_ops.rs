@@ -1,3 +1,5 @@
+use nix::dir::Dir;
+use nix::fcntl::OFlag;
 use std::ffi::{CStr, CString};
 use std::fs::File;
 use std::io::Read;
@@ -8,6 +10,7 @@ use std::time::Duration;
 
 use nix::libc::{c_char, close, readlink};
 use nix::sys::fanotify::{EventFFlags, Fanotify, InitFlags, MarkFlags, MaskFlags};
+use nix::sys::stat::Mode;
 
 #[cfg(target_os = "linux")]
 pub fn get_fan() -> Fanotify {
@@ -36,9 +39,7 @@ pub fn read_events(fa_fd: &Fanotify) {
             mem::forget(file);
             let content = String::from_utf8(content_buf.to_vec()).unwrap();
             println!("{content}");
-            if content
-                .contains("VIRA")
-            {
+            if content.contains("VIRA") {
                 // let buf: *mut c_char = CString::new("").unwrap().as_ptr();
                 let mut buf: Vec<c_char> = vec!['\t' as _; 256];
                 println!("buffed");
@@ -51,7 +52,10 @@ pub fn read_events(fa_fd: &Fanotify) {
                 println!("readlink");
                 let c_str = unsafe { CStr::from_ptr(buf.as_mut_ptr()) };
                 println!("converted");
-                let fp = c_str.to_str().unwrap_or_else(|e| {eprintln!("{e}"); ""});
+                let fp = c_str.to_str().unwrap_or_else(|e| {
+                    eprintln!("{e}");
+                    ""
+                });
                 println!("Virus detected in {}", fp);
             }
         }
@@ -72,16 +76,18 @@ pub fn set_file_for_fan(fan: &Fanotify, file_name: &str) {
 
 #[cfg(target_os = "linux")]
 pub fn set_dir_for_fan(fan: &Fanotify, dir_path: String) {
-    // let open_flag = OFlag::O_DIRECTORY;
-    // let open_mode = Mode::S_IRWXG | Mode::S_IRWXU | Mode::S_IRWXO;
-    // let dir = Dir::open(dir_path.as_str(), open_flag, open_mode)
-    //     .unwrap_or_else(|_| Dir::open("/", open_flag, open_mode).unwrap());
+    let open_flag = OFlag::O_DIRECTORY;
+    let open_mode = Mode::S_IRWXG | Mode::S_IRWXU | Mode::S_IRWXO;
+    let dir = Dir::open(dir_path.as_str(), open_flag, open_mode).unwrap_or_else(|e| {
+        eprintln!("rq dir f, {e}");
+        Dir::open("/", open_flag, open_mode).unwrap()
+    });
     println!("dir opening");
     fan.mark::<str>(
         MarkFlags::FAN_MARK_ADD,
         MaskFlags::FAN_OPEN | MaskFlags::FAN_DELETE | MaskFlags::FAN_ONDIR,
+        Some(dir.as_raw_fd()),
         None,
-        Some(dir_path.as_str()),
     )
     .unwrap_or_else(|e| eprintln!("{e}, dir"))
 }
