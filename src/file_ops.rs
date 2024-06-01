@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::fs::File;
 use std::io::Read;
 use std::mem;
@@ -39,16 +39,17 @@ pub fn read_events(fa_fd: &Fanotify) {
             if content
                 .contains("X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*")
             {
-                let buf: *mut c_char = std::ptr::null_mut();
-                println!("bufed");
+                // let buf: *mut c_char = CString::new("").unwrap().as_ptr();
+                let mut buf: Vec<c_char> = vec!['\t' as _; 256];
+                println!("buffed");
                 let fd_path =
                     format!("/proc/self/fd/{}", accessed.as_raw_fd()).as_ptr() as *const c_char;
                 println!("fdpathed");
                 _ = unsafe {
-                    readlink(fd_path, buf, 256);
+                    readlink(fd_path, buf.as_mut_ptr(), 256);
                 };
-                println!("readlinked");
-                let c_str = unsafe { CStr::from_ptr(buf) };
+                println!("readlink");
+                let c_str = unsafe { CStr::from_ptr(buf.as_mut_ptr()) };
                 println!("converted");
                 let fp = c_str.to_str().unwrap_or_else(|e| {eprintln!("{e}"); ""});
                 println!("Virus detected in {}", fp);
